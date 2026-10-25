@@ -1,0 +1,702 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>RePlate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout concept: an editorial broadsheet laid over a cafeteria tray line. Asymmetric 12-column grid, thick ink rules, serif headlines that overlap the steel, data stamped in mono. */
+  :root {
+    --paper: #FDFBF7;
+    --paper-2: #F3EEE2;
+    --ink: #1A1A1A;
+    --ink-soft: #5A554C;
+    --ochre: #C49A45;
+    --ochre-deep: #8F6B2A;
+    --steel: #8C9196;
+    --steel-hi: #D8DCDF;
+    --steel-lo: #5E656B;
+    --rule: #1A1A1A;
+    --display: "Playfair Display", "Georgia", "Times New Roman", serif;
+    --body: "Jost", "Futura", "Avenir Next", "Trebuchet MS", sans-serif;
+    --mono: "DM Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #161513; --paper-2: #211F1B; --ink: #F1ECE2; --ink-soft: #B5AEA1;
+      --ochre: #D6AE5E; --ochre-deep: #E7C97F; --steel: #A3A8AD; --steel-hi: #3D4348; --steel-lo: #C6CCD0; --rule: #F1ECE2; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #161513; --paper-2: #211F1B; --ink: #F1ECE2; --ink-soft: #B5AEA1;
+    --ochre: #D6AE5E; --ochre-deep: #E7C97F; --steel: #A3A8AD; --steel-hi: #3D4348; --steel-lo: #C6CCD0; --rule: #F1ECE2; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); }
+  body { color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; margin: 0; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1; margin: 0; letter-spacing: -0.015em; }
+  h2 { font-size: clamp(2.2rem, 5.2vw, 4rem); text-wrap: balance; }
+  h3 { font-size: 1.5rem; }
+  p { margin: 0; }
+  a { color: inherit; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ochre-deep); }
+  .soft { color: var(--ink-soft); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .g12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+  @media (max-width: 760px) { .g12 { grid-template-columns: 1fr; } }
+  section { padding-block: 72px; }
+  .rule-top { border-top: 3px solid var(--rule); }
+
+  /* Links: underline drawn from the left with overshoot */
+  .u { text-decoration: none; background-image: linear-gradient(var(--ochre), var(--ochre)); background-size: 0% 2px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size 0.45s var(--ease-spring); padding-bottom: 2px; }
+  .u:hover, .u:focus-visible { background-size: 100% 2px; }
+  .u:focus-visible { outline: 2px solid var(--ochre); outline-offset: 3px; }
+
+  /* Buttons: sharp, thick border, hard offset shadow */
+  .btn { display: inline-block; font-family: var(--mono); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; padding: 14px 20px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); box-shadow: 5px 5px 0 var(--ink); transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-spring), background 0.2s; cursor: pointer; }
+  .btn:hover, .btn:focus-visible { transform: translate(-3px, -3px); box-shadow: 8px 8px 0 var(--ochre); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn.fill { background: var(--ink); color: var(--paper); }
+  .btn:focus-visible { outline: 2px solid var(--ochre); outline-offset: 4px; }
+
+  /* Nav */
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--paper); border-bottom: 3px solid var(--rule); }
+  .nav .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-block: 14px; }
+  .brand { font-family: var(--display); font-weight: 900; font-size: 1.5rem; text-decoration: none; letter-spacing: -0.02em; }
+  .brand em { font-style: italic; font-weight: 400; color: var(--ochre-deep); }
+  .nav-links { display: flex; gap: 22px; font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  @media (max-width: 760px) { .nav-links a:nth-child(n+4) { display: none; } .nav-links { gap: 14px; } }
+
+  /* Hero */
+  .hero { padding-block: 48px 40px; position: relative; }
+  .hero .g12 { align-items: start; }
+  .hero-text { grid-column: 1 / 9; position: relative; z-index: 2; display: grid; gap: 22px; min-width: 0; animation: rise 0.9s var(--ease-out) both; }
+  .hero h1 { font-size: clamp(2.9rem, 8.4vw, 7rem); font-weight: 900; line-height: 0.95; }
+  .hero h1 em { font-style: italic; font-weight: 400; color: var(--ochre-deep); }
+  .hero-tray { grid-column: 7 / 13; grid-row: 1; margin-top: clamp(80px, 14vw, 200px); z-index: 1; animation: rise 1.1s 0.15s var(--ease-out) both; }
+  .hero-tray svg { width: 100%; height: auto; display: block; transform: rotate(-4deg); transition: transform 0.6s var(--ease-out); will-change: transform; }
+  .lede { font-size: 1.15rem; max-width: 34rem; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 18px 16px; padding-top: 6px; }
+  .hero-foot { grid-column: 1 / 13; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); padding-top: 28px; border-top: 3px solid var(--rule); margin-top: 32px; }
+  @media (max-width: 760px) {
+    .hero-text { grid-column: 1; }
+    .hero-tray { grid-column: 1; grid-row: auto; margin-top: -20px; margin-left: 20%; }
+  }
+  @keyframes rise { from { opacity: 0.001; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  /* Ledger: staggered big numbers */
+  .ledger { padding-block: 40px 72px; }
+  .ledger .g12 { row-gap: 36px; align-items: end; }
+  .fact { min-width: 0; border-top: 3px solid var(--rule); padding-top: 14px; display: grid; gap: 6px; }
+  .fact .big { font-family: var(--display); font-weight: 900; line-height: 0.95; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .fact .cap { font-size: 1rem; max-width: 22rem; }
+  .fact.f1 { grid-column: 1 / 8; } .fact.f1 .big { font-size: clamp(4rem, 12vw, 9.5rem); }
+  .fact.f2 { grid-column: 8 / 13; } .fact.f2 .big { font-size: clamp(2.6rem, 6vw, 4.8rem); }
+  .fact.f3 { grid-column: 2 / 6; } .fact.f3 .big { font-size: clamp(2.6rem, 6vw, 4.8rem); }
+  .fact.f4 { grid-column: 7 / 12; } .fact.f4 .big { font-size: clamp(2.6rem, 6vw, 4.8rem); }
+  .fact .big i { font-style: italic; font-weight: 400; color: var(--ochre-deep); }
+  @media (max-width: 760px) { .fact { grid-column: 1 !important; } }
+
+  /* Manifesto: split screen */
+  .manifesto { padding-block: 0; }
+  .manifesto .split { display: grid; grid-template-columns: 5fr 7fr; }
+  @media (max-width: 860px) { .manifesto .split { grid-template-columns: 1fr; } }
+  .mani-left { background: var(--ink); color: var(--paper); padding-block: 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 24px; position: relative; }
+  .mani-left .sticky { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); display: grid; gap: 20px; }
+  .mani-left .giant { font-family: var(--display); font-weight: 900; font-size: clamp(3.2rem, 9vw, 7.5rem); line-height: 0.92; letter-spacing: -0.03em; }
+  .mani-left .giant span { display: block; }
+  .mani-left .giant span:nth-child(2) { font-style: italic; font-weight: 400; color: var(--ochre); padding-left: 0.6em; }
+  .mani-left .giant span:nth-child(3) { font-size: 0.72em; padding-left: 0.15em; }
+  .mani-left .eyebrow { color: var(--ochre); }
+  .mani-right { padding-block: 64px; padding-left: 28px; padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; align-content: start; min-width: 0; }
+  @media (max-width: 860px) { .mani-right { padding-left: max(16px, env(safe-area-inset-left, 0px)); } .mani-left .sticky { position: static; } }
+  .mani-right p { max-width: 36rem; }
+  .mani-right p.first::first-letter { font-family: var(--display); font-weight: 900; font-size: 3.4em; float: left; line-height: 0.8; padding: 6px 10px 0 0; color: var(--ochre-deep); }
+  .mani-right .pull { font-family: var(--display); font-size: clamp(1.4rem, 2.6vw, 1.9rem); line-height: 1.2; font-style: italic; border-left: 6px solid var(--ochre); padding-left: 18px; margin-block: 8px; max-width: 32rem; }
+
+  /* The line: horizontal scroller */
+  .line-sec { padding-block: 72px 56px; }
+  .line-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; flex-wrap: wrap; margin-bottom: 26px; }
+  .line-ctl { display: flex; gap: 10px; }
+  .line-ctl button { font-family: var(--mono); font-size: 1.1rem; width: 48px; height: 48px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; box-shadow: 4px 4px 0 var(--ink); transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-spring); }
+  .line-ctl button:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ochre); }
+  .line-ctl button:focus-visible { outline: 2px solid var(--ochre); outline-offset: 3px; }
+  .line { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-top: 3px solid var(--rule); border-bottom: 3px solid var(--rule); scrollbar-width: thin; scrollbar-color: var(--ochre) transparent; cursor: grab; }
+  .line.dragging { cursor: grabbing; scroll-snap-type: none; }
+  .panel { flex: 0 0 min(78vw, 400px); scroll-snap-align: start; border-right: 3px solid var(--rule); padding: 26px 22px 30px; display: grid; grid-template-rows: auto 1fr auto; gap: 18px; min-height: 420px; background: var(--paper); }
+  .panel:nth-child(odd) { background: var(--paper-2); }
+  .panel .idx { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.16em; color: var(--ochre-deep); display: flex; justify-content: space-between; }
+  .panel h3 { font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 700; line-height: 1; }
+  .panel p { color: var(--ink-soft); font-size: 1rem; max-width: 30ch; }
+  .panel .spec { font-family: var(--mono); font-size: 0.8rem; border-top: 2px solid var(--rule); padding-top: 10px; display: grid; gap: 3px; }
+  .panel svg { width: 120px; height: 80px; display: block; }
+  .line-hint { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-top: 12px; }
+
+  /* Numbers ledger table */
+  .numbers .intro { grid-column: 1 / 7; display: grid; gap: 14px; }
+  .numbers .aside { grid-column: 8 / 13; align-self: end; font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; color: var(--ink-soft); border-left: 3px solid var(--ochre); padding-left: 14px; }
+  .tablewrap { overflow-x: auto; margin-top: 30px; border-top: 3px solid var(--rule); border-bottom: 3px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td { text-align: left; padding: 14px 12px; border-bottom: 1px solid var(--steel); vertical-align: baseline; }
+  th { font-family: var(--mono); font-weight: 500; font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+  th.lvl { font-family: var(--display); font-size: 1.6rem; font-weight: 700; text-transform: none; letter-spacing: -0.01em; color: var(--ink); }
+  th.lvl small { display: block; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; color: var(--ink-soft); margin-top: 4px; }
+  td.v { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; font-size: 1.05rem; }
+  tr.hl td { font-size: 1.45rem; font-family: var(--display); font-weight: 700; color: var(--ochre-deep); }
+  tr.hl td:first-child { font-family: var(--body); font-size: 1rem; color: var(--ink); }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  /* Calculator */
+  .calc-sec .g12 { align-items: start; }
+  .calc-in { grid-column: 1 / 6; display: grid; gap: 18px; border: 2px solid var(--ink); padding: 22px; background: var(--paper); box-shadow: 8px 8px 0 var(--ochre); min-width: 0; }
+  .calc-out { grid-column: 6 / 13; display: grid; gap: 22px; padding-top: 10px; min-width: 0; }
+  @media (max-width: 760px) { .calc-in, .calc-out { grid-column: 1; } }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 2px solid var(--ink); }
+  .seg button { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 6px; border: 0; border-right: 2px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .seg button:focus-visible { outline: 2px solid var(--ochre); outline-offset: -4px; }
+  .field { display: grid; gap: 6px; }
+  .field label { display: flex; justify-content: space-between; gap: 10px; font-size: 0.95rem; font-weight: 500; }
+  .field output { font-family: var(--mono); color: var(--ochre-deep); }
+  .field input[type="range"] { width: 100%; accent-color: var(--ochre); }
+  .field input[type="number"] { width: 100%; font: inherit; font-family: var(--mono); padding: 10px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 0; }
+  .field input[type="number"]:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+  .field .hint { font-size: 0.82rem; color: var(--ink-soft); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 420px) { .two { grid-template-columns: 1fr; } }
+  .check { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+  .check input { accent-color: var(--ochre); width: 18px; height: 18px; }
+  .headline-num { display: grid; gap: 4px; border-top: 3px solid var(--rule); padding-top: 14px; }
+  .headline-num .big { font-family: var(--display); font-weight: 900; font-size: clamp(3rem, 8vw, 5.6rem); line-height: 0.95; letter-spacing: -0.03em; color: var(--ochre-deep); font-variant-numeric: tabular-nums; }
+  .headline-num .big.neg { color: var(--ink); }
+  .headline-num .cap { font-size: 1.05rem; }
+  .bars { display: grid; gap: 12px; }
+  .bar { display: grid; grid-template-columns: 7rem 1fr auto; gap: 12px; align-items: center; font-size: 0.9rem; }
+  .bar .track { height: 18px; border: 2px solid var(--ink); background: var(--paper); }
+  .bar .fill { height: 100%; background: var(--steel); transition: width 0.6s var(--ease-spring); }
+  .bar.re .fill { background: var(--ochre); }
+  .bar .v { font-family: var(--mono); white-space: nowrap; }
+  .lines { display: grid; border-top: 2px solid var(--rule); }
+  .lines .row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--steel); font-size: 0.95rem; align-items: baseline; }
+  .lines .row .k { color: var(--ink-soft); }
+  .lines .row .v { font-family: var(--mono); white-space: nowrap; }
+  .note { font-size: 0.85rem; color: var(--ink-soft); }
+
+  /* Proof: offset panels */
+  .proof .g12 { row-gap: 40px; }
+  .case { border: 2px solid var(--ink); padding: 26px 24px; background: var(--paper); display: grid; gap: 14px; position: relative; min-width: 0; }
+  .case.a { grid-column: 1 / 9; box-shadow: 10px 10px 0 var(--steel-hi); }
+  .case.b { grid-column: 5 / 13; margin-top: -10px; box-shadow: 10px 10px 0 var(--ochre); background: var(--paper-2); }
+  @media (max-width: 760px) { .case.a, .case.b { grid-column: 1; margin-top: 0; } }
+  .case h3 { font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.05; }
+  .case .meta { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .case ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+  .case blockquote { margin: 0; font-family: var(--display); font-style: italic; font-size: 1.15rem; line-height: 1.3; border-left: 4px solid var(--ochre); padding-left: 14px; }
+  .case blockquote cite { display: block; font-family: var(--mono); font-style: normal; font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 8px; color: var(--ink-soft); }
+  .stamp { position: absolute; top: -16px; right: 18px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; border: 2px solid var(--ochre-deep); color: var(--ochre-deep); padding: 5px 9px; background: var(--paper); transform: rotate(-3deg); }
+
+  /* Compare table reuse */
+  .compare td.ok { color: var(--ochre-deep); font-weight: 600; }
+  .compare td.bad { color: var(--ink-soft); }
+  .compare tr.us td { background: var(--paper-2); font-weight: 500; }
+
+  /* End of life stamps */
+  .eol .g12 { row-gap: 30px; align-items: start; }
+  .stampcard { border: 3px solid var(--ink); padding: 22px; display: grid; gap: 10px; background: var(--paper); min-width: 0; transition: transform 0.5s var(--ease-spring); }
+  .stampcard:hover { transform: rotate(0deg) !important; }
+  .stampcard .tag { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ochre-deep); }
+  .stampcard h3 { font-size: 1.6rem; line-height: 1.05; }
+  .stampcard p { color: var(--ink-soft); font-size: 0.98rem; }
+  .s1 { grid-column: 1 / 5; transform: rotate(-1.5deg); }
+  .s2 { grid-column: 5 / 9; transform: rotate(1deg); margin-top: 26px; }
+  .s3 { grid-column: 9 / 13; transform: rotate(-0.6deg); margin-top: 8px; }
+  @media (max-width: 760px) { .s1, .s2, .s3 { grid-column: 1; margin-top: 0; } }
+
+  /* Pitch */
+  .pitch .steps { grid-column: 1 / 8; counter-reset: s; display: grid; }
+  .pitch .step { display: grid; grid-template-columns: 3.2rem 1fr; gap: 14px; padding: 18px 0; border-top: 2px solid var(--rule); align-items: baseline; }
+  .pitch .step::before { counter-increment: s; content: counter(s); font-family: var(--display); font-weight: 900; font-size: 2.2rem; color: var(--ochre-deep); line-height: 1; }
+  .pitch .step strong { font-family: var(--display); font-size: 1.25rem; display: block; margin-bottom: 4px; }
+  .pitch .side { grid-column: 9 / 13; display: grid; gap: 16px; align-content: start; }
+  @media (max-width: 760px) { .pitch .steps, .pitch .side { grid-column: 1; } }
+
+  /* Sources */
+  .sources ol { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; font-size: 0.88rem; color: var(--ink-soft); max-width: 60rem; }
+  .sources a { word-break: break-word; color: var(--ink); }
+  footer { padding-block: 26px 44px; border-top: 3px solid var(--rule); font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.06em; color: var(--ink-soft); }
+  footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-text, .hero-tray { animation: none; }
+    .btn, .line-ctl button, .bar .fill, .stampcard, .u, .hero-tray svg { transition: none; }
+  }
+</style>
+
+<nav class="nav" aria-label="Site">
+  <div class="wrap">
+    <a class="brand" href="#top">Re<em>Plate</em></a>
+    <div class="nav-links">
+      <a class="u" href="#why">Why</a>
+      <a class="u" href="#line">The line</a>
+      <a class="u" href="#numbers">Numbers</a>
+      <a class="u" href="#calc">Calculator</a>
+      <a class="u" href="#proof">Proof</a>
+      <a class="u" href="#pitch">Pitch</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap g12">
+    <div class="hero-text">
+      <span class="eyebrow">Unified stainless serviceware for U.S. schools</span>
+      <h1>Your lunch tray should <em>outlive</em> your lunch.</h1>
+      <p class="lede">American schools serve 4.9 billion lunches a year on things built to be thrown away twenty minutes later. We think that's absurd. RePlate puts one stainless tray, one fork and spoon, and one cup in front of every student, from one factory, washed and used for a decade.</p>
+      <div class="cta-row">
+        <a class="btn fill" href="#calc">Run your school's numbers</a>
+        <a class="btn" href="#line">Walk the line</a>
+      </div>
+    </div>
+    <div class="hero-tray" id="trayWrap" aria-hidden="true">
+      <svg id="tray" viewBox="0 0 460 330" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dfe3e6"/><stop offset="0.45" stop-color="#aab4ba"/><stop offset="0.55" stop-color="#c4ccd0"/><stop offset="1" stop-color="#86929a"/></linearGradient>
+          <linearGradient id="well" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a969c"/><stop offset="1" stop-color="#cdd4d8"/></linearGradient>
+          <linearGradient id="cut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaeeef"/><stop offset="1" stop-color="#9aa5ab"/></linearGradient>
+        </defs>
+        <g transform="translate(40 40)">
+          <rect x="0" y="0" width="380" height="240" fill="url(#steel)" stroke="#4b555b" stroke-width="3"/>
+          <rect x="18" y="18" width="200" height="110" fill="url(#well)" stroke="#4b555b" stroke-width="2"/>
+          <rect x="232" y="18" width="130" height="110" fill="url(#well)" stroke="#4b555b" stroke-width="2"/>
+          <rect x="18" y="142" width="110" height="80" fill="url(#well)" stroke="#4b555b" stroke-width="2"/>
+          <rect x="142" y="142" width="110" height="80" fill="url(#well)" stroke="#4b555b" stroke-width="2"/>
+          <rect x="266" y="142" width="96" height="80" fill="url(#well)" stroke="#4b555b" stroke-width="2"/>
+          <text x="118" y="78" font-family="DM Mono, monospace" font-size="12" text-anchor="middle" fill="#2f383d" letter-spacing="3">ENTRÉE</text>
+          <text x="297" y="78" font-family="DM Mono, monospace" font-size="12" text-anchor="middle" fill="#2f383d" letter-spacing="3">FRUIT</text>
+          <text x="73" y="187" font-family="DM Mono, monospace" font-size="12" text-anchor="middle" fill="#2f383d" letter-spacing="3">VEG</text>
+          <text x="197" y="187" font-family="DM Mono, monospace" font-size="12" text-anchor="middle" fill="#2f383d" letter-spacing="3">GRAIN</text>
+          <text x="314" y="187" font-family="DM Mono, monospace" font-size="12" text-anchor="middle" fill="#2f383d" letter-spacing="3">MILK</text>
+          <text x="190" y="234" font-family="DM Mono, monospace" font-size="9" text-anchor="middle" fill="#2f383d" letter-spacing="4">304 STAINLESS · 18/8 · REPLATE</text>
+        </g>
+        <g transform="translate(400 66) rotate(14)">
+          <rect x="-7" y="40" width="14" height="150" fill="url(#cut)" stroke="#4b555b" stroke-width="2"/>
+          <path d="M-14 0 h28 v34 a14 14 0 0 1 -28 0 z" fill="url(#cut)" stroke="#4b555b" stroke-width="2"/>
+          <line x1="-7" y1="2" x2="-7" y2="28" stroke="#4b555b" stroke-width="2"/><line x1="0" y1="2" x2="0" y2="28" stroke="#4b555b" stroke-width="2"/><line x1="7" y1="2" x2="7" y2="28" stroke="#4b555b" stroke-width="2"/>
+        </g>
+        <g transform="translate(434 96) rotate(14)">
+          <rect x="-6" y="34" width="12" height="150" fill="url(#cut)" stroke="#4b555b" stroke-width="2"/>
+          <ellipse cx="0" cy="18" rx="15" ry="22" fill="url(#cut)" stroke="#4b555b" stroke-width="2"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hero-foot">
+      <span>Conrad Challenge 2026–27 · Energy &amp; Environment</span>
+      <span>Student company · Southern California</span>
+    </div>
+  </div>
+</section>
+
+<section class="ledger" id="why">
+  <div class="wrap g12">
+    <div class="fact f1"><span class="big">4.9<i>bn</i></span><span class="cap">school lunches served in the U.S. every year. Nearly all of them on a tray that gets used once.</span></div>
+    <div class="fact f2"><span class="big">29.6<i>M</i></span><span class="cap">students eating a school lunch on any given day.</span></div>
+    <div class="fact f3"><span class="big">12<i>¢</i></span><span class="cap">per meal for a disposable tray plus a sealed plastic spork kit. Thrown away. Every single meal.</span></div>
+    <div class="fact f4"><span class="big">18<i>→</i>6</span><span class="cap">trash bags per lunch period at one elementary school after it switched to stainless trays.</span></div>
+  </div>
+</section>
+
+<section class="manifesto rule-top">
+  <div class="split">
+    <div class="mani-left">
+      <div class="sticky">
+        <span class="eyebrow">What we believe</span>
+        <p class="giant"><span>Wash it.</span><span>Don't trash it.</span><span>Every school.</span></p>
+      </div>
+    </div>
+    <div class="mani-right">
+      <p class="first">Most of us have eaten off a foam tray with a plastic spork that came shrink-wrapped with a straw and a napkin. You eat for twenty minutes, then the whole thing goes in a bag, and the bag goes to a landfill where the foam sits for a few hundred years. Nobody chose this on purpose. Schools switched from washable trays to disposables decades ago because dishwashers and the people to run them cost money, and foam cost five cents.</p>
+      <p>Then the "green" fix showed up: compostable fiber trays. They cost eight to thirteen cents, they're often coated with PFAS, and in most districts there is no industrial composter to send them to, so they go to the same landfill the foam did. The school pays more to feel better.</p>
+      <p class="pull">In China, every student in a school canteen eats off the same stainless tray, hands it back, and gets it clean the next day. No one there thinks this is remarkable.</p>
+      <p>That's the whole idea. Not a new material, not an app. A standard. One tray shape, one fork and spoon, one cup, one return crate, one dishwasher cycle, in every school in a district. When everything is the same, nobody sorts, nothing runs out, and the per-meal cost drops to about a penny or two.</p>
+      <p>RePlate is the company in the middle. We buy the sets in volume from a U.S. foodservice factory, deliver them with the racks and crates, train the staff in ten minutes, and take back anything that gets bent or dented. A food-service director says yes once and never buys a tray again.</p>
+      <p>We're a student team. We eat these lunches. That's why we care about the tray.</p>
+    </div>
+  </div>
+</section>
+
+<section class="line-sec" id="line">
+  <div class="wrap">
+    <div class="line-head">
+      <div>
+        <span class="eyebrow">The line</span>
+        <h2>Six stations, one standard</h2>
+      </div>
+      <div class="line-ctl" aria-label="Scroll the line">
+        <button type="button" id="prevBtn" aria-label="Previous station">←</button>
+        <button type="button" id="nextBtn" aria-label="Next station">→</button>
+      </div>
+    </div>
+  </div>
+  <div class="line" id="line" tabindex="0" aria-label="The RePlate kit and process, scroll sideways">
+    <article class="panel">
+      <div class="idx"><span>Station 1</span><span>Tray</span></div>
+      <div><h3>The five-compartment tray</h3><p>304 (18/8) food-grade stainless, 0.6 mm, rolled edges so nothing is sharp. Five wells for the five USDA meal components. Stacks fifty to a crate.</p></div>
+      <div class="spec"><span>Weight: ~290 g</span><span>Wash cycles: 5,000+</span><span>Source: The Vollrath Company</span></div>
+    </article>
+    <article class="panel">
+      <div class="idx"><span>Station 2</span><span>Fork + spoon</span></div>
+      <div><h3>Two pieces of steel instead of a spork kit</h3><p>18/0 stainless, which is magnetic on purpose. A magnet strip on the return crate grabs them so they don't walk off with the trash.</p></div>
+      <div class="spec"><span>Replaces: sealed plastic spork, straw, napkin wrap</span><span>Per set: ~$2.50 at volume</span></div>
+    </article>
+    <article class="panel">
+      <div class="idx"><span>Station 3</span><span>Cup</span></div>
+      <div><h3>The 8-ounce cup</h3><p>Stainless, stackable, for water or milk from a dispenser. It lets a school drop plastic cups and, eventually, single-serve cartons.</p></div>
+      <div class="spec"><span>Capacity: 8 oz</span><span>Per cup: ~$2.50 at volume</span></div>
+    </article>
+    <article class="panel">
+      <div class="idx"><span>Station 4</span><span>Return</span></div>
+      <div><h3>Scrape, stack, done</h3><p>A rolling crate with a scraper bar and a magnet strip. Students clear a tray in about five seconds. The crate rolls straight to the dish room.</p></div>
+      <div class="spec"><span>Sets delivered: 110% of daily lunches</span><span>Crates and racks: ~$400 per school</span></div>
+    </article>
+    <article class="panel">
+      <div class="idx"><span>Station 5</span><span>Wash</span></div>
+      <div><h3>The dishwasher that's probably already there</h3><p>Most schools built before 1990 still have a commercial machine. Stainless takes the 180°F sanitize rinse that warps plastic. If there's no machine, we bundle a compact one into the lease.</p></div>
+      <div class="spec"><span>Water, energy, detergent: ~2¢ per meal</span><span>New machine if needed: ~$12,000</span></div>
+    </article>
+    <article class="panel">
+      <div class="idx"><span>Station 6</span><span>Recover</span></div>
+      <div><h3>Nothing from the kit hits the school's trash</h3><p>Worn or dented pieces come back to RePlate with the next delivery. Usable sets are donated to school meal programs in Africa; anything beyond repair is sold as stainless scrap.</p></div>
+      <div class="spec"><span>Replacement rate: ~8% of sets per year</span><span>Landfilled: 0</span></div>
+    </article>
+  </div>
+  <div class="wrap"><p class="line-hint">Drag sideways or use the arrows</p></div>
+</section>
+
+<section class="numbers rule-top" id="numbers">
+  <div class="wrap">
+    <div class="g12">
+      <div class="intro">
+        <span class="eyebrow">The numbers</span>
+        <h2>What an average school pays now, and what it would pay us</h2>
+        <p>Built on the national average enrollment for each level (NCES, 2023–24), 60% lunch participation, and a 180-day year.</p>
+      </div>
+      <div class="aside">Disposables: 8¢ tray (midpoint of foam and fiber) + 4¢ spork kit. RePlate: $10 tray, $2.50 fork and spoon, $2.50 cup at factory volume, 10% spare stock, $400 crates and racks, 2¢ per meal to wash, 8% of sets replaced a year. Savings count only avoided disposable purchases, not trash hauling.</div>
+    </div>
+    <div class="tablewrap">
+      <table id="ledgerTable">
+        <thead><tr><th></th><th class="lvl">Elementary<small>avg. 439 students · 51,654 schools</small></th><th class="lvl">Middle<small>avg. 562 students · 15,858 schools</small></th><th class="lvl">High school<small>avg. 831 students · 17,622 schools</small></th></tr></thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="calc-sec rule-top" id="calc">
+  <div class="wrap">
+    <div class="g12" style="margin-bottom:30px">
+      <div style="grid-column:1/8;display:grid;gap:12px">
+        <span class="eyebrow">Calculator</span>
+        <h2>Now do it with your school</h2>
+        <p class="soft">Pick a level or type the real enrollment. Every assumption is a slider, so a food-service director can plug in their actual quotes and see if we're lying.</p>
+      </div>
+    </div>
+    <div class="g12">
+      <form class="calc-in" id="calcForm" aria-label="Savings calculator inputs">
+        <div class="seg" role="group" aria-label="School level">
+          <button type="button" data-level="es" aria-pressed="false">Elem.</button>
+          <button type="button" data-level="ms" aria-pressed="false">Middle</button>
+          <button type="button" data-level="hs" aria-pressed="true">High</button>
+        </div>
+        <div class="two">
+          <div class="field"><label for="enroll">Enrollment</label><input type="number" id="enroll" min="50" max="6000" step="1" value="831"><span class="hint">NCES avg: 439 / 562 / 831</span></div>
+          <div class="field"><label for="days">School days</label><input type="number" id="days" min="100" max="250" step="1" value="180"></div>
+        </div>
+        <div class="field"><label for="part">Students eating school lunch <output for="part" id="partOut">60%</output></label><input type="range" id="part" min="20" max="100" step="1" value="60"><span class="hint">National average is about 60%</span></div>
+        <div class="field"><label for="disp">Disposable tray <output for="disp" id="dispOut">8¢</output></label><input type="range" id="disp" min="3" max="20" step="1" value="8"><span class="hint">Foam ~5¢, compostable fiber 8–13¢</span></div>
+        <div class="field"><label for="kit">Spork kit <output for="kit" id="kitOut">4¢</output></label><input type="range" id="kit" min="0" max="10" step="1" value="4"></div>
+        <div class="field"><label for="setcost">RePlate set (tray, fork, spoon, cup) <output for="setcost" id="setOut">$15</output></label><input type="range" id="setcost" min="8" max="40" step="1" value="15"><span class="hint">Retail stainless trays alone run $10–30; volume brings a full set near $15</span></div>
+        <div class="field"><label for="wash">Washing per meal <output for="wash" id="washOut">2¢</output></label><input type="range" id="wash" min="0" max="8" step="1" value="2"><span class="hint">Water, energy, detergent. Labor is usually existing staff.</span></div>
+        <label class="check"><input type="checkbox" id="dw"> No dishwasher; add a new machine ($12,000)</label>
+      </form>
+
+      <div class="calc-out" aria-live="polite">
+        <div class="headline-num"><span class="big" id="rNet">$0</span><span class="cap">net savings per year after payback · <span class="mono" id="rPayback">0 mo</span> payback</span></div>
+        <div class="bars" aria-label="Annual cost comparison">
+          <div class="bar"><span>Disposables</span><div class="track"><div class="fill" id="bDisp" style="width:100%"></div></div><span class="v" id="bDispV">$0</span></div>
+          <div class="bar re"><span>RePlate</span><div class="track"><div class="fill" id="bRe" style="width:20%"></div></div><span class="v" id="bReV">$0</span></div>
+        </div>
+        <div class="lines">
+          <div class="row"><span class="k">Lunches a day</span><span class="v" id="rLunches">0</span></div>
+          <div class="row"><span class="k">Disposable items landfilled a year</span><span class="v" id="rItems">0</span></div>
+          <div class="row"><span class="k">Spent on disposables a year</span><span class="v" id="rDispCost">$0</span></div>
+          <div class="row"><span class="k">RePlate sets delivered</span><span class="v" id="rSets">0</span></div>
+          <div class="row"><span class="k">Up front</span><span class="v" id="rUpfront">$0</span></div>
+          <div class="row"><span class="k">Operating a year (wash + replacements)</span><span class="v" id="rOp">$0</span></div>
+          <div class="row"><span class="k">Five-year net</span><span class="v" id="rFive">$0</span></div>
+          <div class="row"><span class="k">Waste kept out of landfill a year</span><span class="v" id="rLbs">0 lb</span></div>
+        </div>
+        <p class="note">Districts in the case studies also cut their trash-hauling bill, which was bigger than the tray savings in Bedford's case. That's not in this number.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="proof rule-top" id="proof">
+  <div class="wrap">
+    <div class="g12" style="margin-bottom:34px">
+      <div style="grid-column:1/9;display:grid;gap:12px">
+        <span class="eyebrow">Proof</span>
+        <h2>Two districts already did this. Here's what it cost them.</h2>
+        <p class="soft">Both were documented by the ReThink Disposable program (Clean Water Fund). We didn't make these numbers up; we built our model on them.</p>
+      </div>
+    </div>
+    <div class="g12">
+      <article class="case a">
+        <span class="stamp">Case study · 2025</span>
+        <h3>Bedford Public Schools, Massachusetts</h3>
+        <p class="meta">4 schools · ~1,400 lunches a day · foam trays → stainless, December 2024</p>
+        <ul>
+          <li>261,720 foam trays gone per year, almost 3 tons of waste</li>
+          <li>$11,777 net savings a year on serviceware after payback</li>
+          <li>Payback in 9 months with 110% tray stock; 8.3 months at one tray per meal</li>
+          <li>About $20,700 a year less in waste-hauling fees on top</li>
+          <li>Per school: elementary $2,700–3,100, middle $2,300, high school $3,600 a year</li>
+        </ul>
+        <blockquote>The lead custodian reported trash falling from 18 bags to 6 per lunch day at one elementary school, and said the change streamlined the whole lunchtime cleanup.<cite>ReThink Disposable, Bedford case study</cite></blockquote>
+      </article>
+      <article class="case b">
+        <span class="stamp">Case study · 2026</span>
+        <h3>Arlington Public Schools, Massachusetts</h3>
+        <p class="meta">4 schools of 325–500 students · plastic cutlery and fiber trays → stainless, 2022–2026</p>
+        <ul>
+          <li>315,436 disposable items gone per year, 3.6 tons</li>
+          <li>$12,929 net savings a year across trays, cutlery and bulk condiments</li>
+          <li>7.4-month payback on the whole program</li>
+          <li>Cutlery alone: 215,294 plastic utensils avoided, $2,153 a year saved</li>
+          <li>Started with a high-school student group in 2022</li>
+        </ul>
+        <blockquote>The food-service director said she'd been anxious about the switch and that it turned out to be harder for the adults than for the students.<cite>ReThink Disposable, Arlington case study</cite></blockquote>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="compare rule-top" id="options">
+  <div class="wrap">
+    <div class="g12" style="margin-bottom:10px">
+      <div style="grid-column:1/8;display:grid;gap:12px">
+        <span class="eyebrow">Why steel</span>
+        <h2>Every tray a cafeteria can buy</h2>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Option</th><th>Per meal</th><th>After use</th><th>Lifespan</th><th>In the food</th><th>Our take</th></tr></thead>
+        <tbody>
+          <tr><td>Foam tray + spork kit</td><td class="v">9¢</td><td class="bad">Landfill</td><td>1 meal</td><td class="bad">Styrene</td><td>Cheapest today. Banned in a growing list of states.</td></tr>
+          <tr><td>Compostable fiber tray</td><td class="v">12–17¢</td><td class="bad">Landfill unless there's an industrial composter</td><td>1 meal</td><td class="bad">Often PFAS-coated</td><td>Costs more and usually ends up in the same place.</td></tr>
+          <tr><td>Reusable plastic tray</td><td class="v">1–2¢</td><td class="bad">Rarely recycled</td><td>2–4 years</td><td class="bad">Stains, scratches, sheds microplastic</td><td>Cheap, but warps in a sanitize rinse and looks tired in a year.</td></tr>
+          <tr class="us"><td>RePlate stainless set</td><td class="v">1–3¢</td><td class="ok">Scrap steel, resold</td><td>10+ years</td><td class="ok">Nothing</td><td>Most money up front, least per meal, zero waste.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px">Per-meal cost for a reusable = set price ÷ meals over its life, plus washing. Making a stainless tray takes more energy than making one foam tray, and the stainless one breaks even after roughly 50–100 uses, which is a few weeks of lunches.</p>
+  </div>
+</section>
+
+<section class="eol rule-top" id="eol">
+  <div class="wrap">
+    <div class="g12" style="margin-bottom:26px">
+      <div style="grid-column:1/8;display:grid;gap:12px">
+        <span class="eyebrow">End of life</span>
+        <h2>A tray that never becomes trash</h2>
+      </div>
+    </div>
+    <div class="g12">
+      <div class="stampcard s1"><span class="tag">Still usable</span><h3>Donated to school meal programs in Africa</h3><p>Dented or scratched sets that still hold food safely are sanitized and shipped to partner school-feeding programs, where many canteens serve on single-use or shared plates.</p></div>
+      <div class="stampcard s2"><span class="tag">Beyond repair</span><h3>Sold as stainless scrap</h3><p>Stainless is one of the most recycled materials on earth and scrap has real resale value. A cracked tray goes back into the steel supply, not into the ground.</p></div>
+      <div class="stampcard s3"><span class="tag">Always</span><h3>Replaced without the school lifting a finger</h3><p>Replacement sets ride along with the next delivery. The school never buys serviceware piece by piece and never puts a tray in a trash bag.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pitch rule-top" id="pitch">
+  <div class="wrap">
+    <div class="g12" style="margin-bottom:26px">
+      <div style="grid-column:1/9;display:grid;gap:12px">
+        <span class="eyebrow">Bring it to your school</span>
+        <h2>A pilot takes one lunch line and one semester</h2>
+      </div>
+    </div>
+    <div class="g12">
+      <div class="steps">
+        <div class="step"><div><strong>Count what you throw away.</strong>Weigh one week of cafeteria trash and count the trays and spork kits used. That's the baseline we measure against.</div></div>
+        <div class="step"><div><strong>Check the dish room.</strong>If there's a commercial dishwasher, you're ready. If not, we price a compact machine into the lease.</div></div>
+        <div class="step"><div><strong>We deliver.</strong>Sets for 110% of daily lunches, return crates, racks, and a ten-minute walkthrough for cafeteria staff.</div></div>
+        <div class="step"><div><strong>Measure for a semester.</strong>Trash weight, trays lost, wash time, what students actually think.</div></div>
+        <div class="step"><div><strong>Expand with the data.</strong>Take the pilot numbers to the district and roll it out everywhere.</div></div>
+      </div>
+      <div class="side">
+        <p class="eyebrow">Talk to us</p>
+        <p>RePlate is a student company competing in the 2026–27 Conrad Challenge, Energy &amp; Environment category. If you run a cafeteria, sit on a school board, or want to help, we want to hear from you.</p>
+        <a class="btn" href="#calc">Start with the calculator</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sources rule-top" id="sources">
+  <div class="wrap">
+    <div style="display:grid;gap:12px;margin-bottom:22px">
+      <span class="eyebrow">Sources</span>
+      <h2>Where every number comes from</h2>
+    </div>
+    <ol>
+      <li>USDA Food and Nutrition Service, National School Lunch Program participation and lunches served: 29.6 million students a day, 4.9 billion lunches a year. <a class="u" href="https://fns-prod.azureedge.us/sites/default/files/resource-files/slsummar-1.pdf">fns.usda.gov</a></li>
+      <li>National Center for Education Statistics, Common Core of Data 2023–24, Table 4: 51,654 elementary schools (avg. 439 students), 15,858 middle (562), 17,622 high (831). <a class="u" href="https://nces.ed.gov/ccd/tables/202324_summary_4.asp">nces.ed.gov</a></li>
+      <li>ReThink Disposable / Clean Water Fund, Bedford Public Schools case study, 2025. <a class="u" href="https://cleanwaterfund.org/sites/default/files/2025-04/MA-Bedford-ReThink-Case-Study.pdf">cleanwaterfund.org</a></li>
+      <li>ReThink Disposable / Massachusetts DEP, Arlington Public Schools case study, 2026. <a class="u" href="https://www.mass.gov/doc/rethink-disposable-case-study-arlington-public-schools/download">mass.gov</a></li>
+      <li>Portland Press Herald, Portland (ME) Public Schools: compostable trays about 8¢ vs 5¢ for foam. <a class="u" href="https://www.pressherald.com/?p=2165008">pressherald.com</a></li>
+      <li>KDVR Denver, Cherry Creek School District: 5¢ foam vs 13¢ compostable, 125,000 trays a week. <a class="u" href="https://digital-release.kdvr.com/?p=1905422">kdvr.com</a></li>
+      <li>The Vollrath Company, stainless institutional tray pricing (six-compartment tray $30.66 MSRP). <a class="u" href="https://www.vollrathfoodservice.com/products/smallwares/buffet-and-tabletop-service/specialty-service-items/stainless-steel-institutional-ware/47252">vollrathfoodservice.com</a></li>
+      <li>Fremont Unified School District / UC ANR, reusable tray pilot and the plastic spork kit. <a class="u" href="https://class.ucanr.edu/node/156922">class.ucanr.edu</a></li>
+      <li>Urban School Food Alliance, six large districts leaving foam trays, 225 million trays a year. <a class="u" href="https://www.motherjones.com/?p=275606">motherjones.com</a></li>
+    </ol>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>RePlate · Re-think. Re-use. RePlate.</span>
+    <span>Planning figures, not quotes. Replace with supplier bids before pitching a district.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var LEVELS = { es: 439, ms: 562, hs: 831 };
+  var RACKS = 400, SPARE = 1.10, REPLACE = 0.08, DISHWASHER = 12000;
+  var LB_TRAY = 0.04, LB_KIT = 0.006;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function money(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+  function int(n) { return Math.round(n).toLocaleString("en-US"); }
+
+  function compute(o) {
+    var lunches = Math.round(o.enroll * o.part);
+    var meals = lunches * o.days;
+    var items = meals * 2;
+    var dispCost = meals * (o.disp + o.kit);
+    var sets = Math.ceil(lunches * SPARE);
+    var upfront = sets * o.set + RACKS + (o.dw ? DISHWASHER : 0);
+    var op = meals * o.wash + sets * o.set * REPLACE;
+    var net = dispCost - op;
+    var payback = net > 0 ? upfront / net * 12 : Infinity;
+    var five = net * 5 - upfront;
+    var lbs = meals * (LB_TRAY + LB_KIT);
+    return { lunches: lunches, items: items, dispCost: dispCost, sets: sets, upfront: upfront, op: op, net: net, payback: payback, five: five, lbs: lbs };
+  }
+  var DEFAULTS = { part: 0.60, days: 180, disp: 0.08, kit: 0.04, set: 15, wash: 0.02, dw: false };
+
+  /* Ledger table */
+  var res = {};
+  Object.keys(LEVELS).forEach(function (k) { res[k] = compute(Object.assign({ enroll: LEVELS[k] }, DEFAULTS)); });
+  var rows = [
+    ["Lunches a day", function (r) { return int(r.lunches); }],
+    ["Disposables landfilled a year", function (r) { return int(r.items); }],
+    ["Spent on disposables a year", function (r) { return money(r.dispCost); }],
+    ["RePlate sets delivered", function (r) { return int(r.sets); }],
+    ["RePlate up front", function (r) { return money(r.upfront); }],
+    ["RePlate operating a year", function (r) { return money(r.op); }],
+    ["Payback", function (r) { return r.payback.toFixed(0) + " months"; }],
+    ["Net savings a year", function (r) { return money(r.net); }, true],
+    ["Five-year net", function (r) { return money(r.five); }]
+  ];
+  var body = document.getElementById("ledgerBody");
+  rows.forEach(function (row) {
+    var tr = document.createElement("tr");
+    if (row[2]) tr.className = "hl";
+    tr.innerHTML = "<td>" + row[0] + "</td>" + ["es", "ms", "hs"].map(function (k) { return '<td class="v">' + row[1](res[k]) + "</td>"; }).join("");
+    body.appendChild(tr);
+  });
+
+  /* Calculator */
+  var $ = function (id) { return document.getElementById(id); };
+  var inputs = { enroll: $("enroll"), days: $("days"), part: $("part"), disp: $("disp"), kit: $("kit"), set: $("setcost"), wash: $("wash"), dw: $("dw") };
+  var segButtons = Array.prototype.slice.call(document.querySelectorAll(".seg button"));
+  function read() {
+    return { enroll: Math.max(1, Number(inputs.enroll.value) || 0), days: Math.max(1, Number(inputs.days.value) || 180),
+             part: Number(inputs.part.value) / 100, disp: Number(inputs.disp.value) / 100, kit: Number(inputs.kit.value) / 100,
+             set: Number(inputs.set.value), wash: Number(inputs.wash.value) / 100, dw: inputs.dw.checked };
+  }
+  function render() {
+    var o = read(), r = compute(o);
+    $("partOut").textContent = inputs.part.value + "%";
+    $("dispOut").textContent = inputs.disp.value + "¢";
+    $("kitOut").textContent = inputs.kit.value + "¢";
+    $("setOut").textContent = "$" + inputs.set.value;
+    $("washOut").textContent = inputs.wash.value + "¢";
+    var big = $("rNet"); big.textContent = money(r.net); big.classList.toggle("neg", r.net <= 0);
+    $("rPayback").textContent = isFinite(r.payback) ? r.payback.toFixed(1) + " mo" : "no";
+    $("rLunches").textContent = int(r.lunches);
+    $("rItems").textContent = int(r.items);
+    $("rDispCost").textContent = money(r.dispCost);
+    $("rSets").textContent = int(r.sets);
+    $("rUpfront").textContent = money(r.upfront);
+    $("rOp").textContent = money(r.op);
+    $("rFive").textContent = money(r.five);
+    $("rLbs").textContent = int(r.lbs) + " lb";
+    var maxv = Math.max(r.dispCost, r.op, 1);
+    $("bDisp").style.width = (r.dispCost / maxv * 100) + "%";
+    $("bRe").style.width = (r.op / maxv * 100) + "%";
+    $("bDispV").textContent = money(r.dispCost) + "/yr";
+    $("bReV").textContent = money(r.op) + "/yr";
+  }
+  function setLevel(level) {
+    segButtons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.level === level)); });
+    if (LEVELS[level]) inputs.enroll.value = LEVELS[level];
+    render();
+  }
+  segButtons.forEach(function (b) { b.addEventListener("click", function () { setLevel(b.dataset.level); }); });
+  Object.keys(inputs).forEach(function (k) {
+    inputs[k].addEventListener("input", function () {
+      if (k === "enroll") segButtons.forEach(function (b) { b.setAttribute("aria-pressed", String(LEVELS[b.dataset.level] === Number(inputs.enroll.value))); });
+      render();
+    });
+  });
+  $("calcForm").addEventListener("submit", function (e) { e.preventDefault(); render(); });
+  render();
+
+  /* The line: arrows, drag to scroll */
+  var line = $("line");
+  function panelWidth() { var p = line.querySelector(".panel"); return p ? p.getBoundingClientRect().width : 320; }
+  $("nextBtn").addEventListener("click", function () { line.scrollBy({ left: panelWidth(), behavior: reduce ? "auto" : "smooth" }); });
+  $("prevBtn").addEventListener("click", function () { line.scrollBy({ left: -panelWidth(), behavior: reduce ? "auto" : "smooth" }); });
+  var drag = null;
+  line.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") return; drag = { x: e.clientX, s: line.scrollLeft }; line.classList.add("dragging"); });
+  window.addEventListener("pointermove", function (e) { if (!drag) return; line.scrollLeft = drag.s - (e.clientX - drag.x); });
+  window.addEventListener("pointerup", function () { drag = null; line.classList.remove("dragging"); });
+  line.addEventListener("keydown", function (e) { if (e.key === "ArrowRight") { e.preventDefault(); $("nextBtn").click(); } if (e.key === "ArrowLeft") { e.preventDefault(); $("prevBtn").click(); } });
+
+  /* Hero tray: leans a little toward the cursor, settles back */
+  var tray = $("tray"), wrap = $("trayWrap");
+  if (!reduce && window.matchMedia && window.matchMedia("(hover: hover)").matches) {
+    var raf = null, tx = 0, ty = 0;
+    document.querySelector(".hero").addEventListener("pointermove", function (e) {
+      var b = wrap.getBoundingClientRect();
+      var dx = (e.clientX - (b.left + b.width / 2)) / b.width, dy = (e.clientY - (b.top + b.height / 2)) / b.height;
+      tx = Math.max(-1, Math.min(1, dx)); ty = Math.max(-1, Math.min(1, dy));
+      if (!raf) raf = requestAnimationFrame(function () { raf = null; tray.style.transform = "rotate(" + (-4 + tx * 3) + "deg) translate(" + (tx * 6) + "px," + (ty * 6) + "px)"; });
+    });
+    document.querySelector(".hero").addEventListener("pointerleave", function () { tray.style.transform = "rotate(-4deg)"; });
+  }
+})();
+</script>
+
+</body></html>
